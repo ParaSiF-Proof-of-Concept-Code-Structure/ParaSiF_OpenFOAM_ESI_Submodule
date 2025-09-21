@@ -1,0 +1,27 @@
+sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
+sinclude $(RULES)/mplib$(WM_MPLIB)
+
+EXE_INC = \
+    $(PFLAGS) \
+    $(PINC) \
+    -I$(OBJECTS_DIR) \
+    -I../../../../../coupling/MUI/src
+
+LIB_LIBS = \
+    $(PLIBS) \
+    $(FOAM_LIBBIN)/libOSspecific.o
+
+ifeq (libo,$(FOAM_LINK_DUMMY_PSTREAM))
+    LIB_LIBS += $(FOAM_LIBBIN)/dummy/libPstream.o
+else
+    LIB_LIBS += -L$(FOAM_LIBBIN)/dummy -lPstream
+endif
+
+/* libz */
+EXE_INC += -DHAVE_LIBZ
+
+LIB_LIBS += -lz
+
+
+/* Project lib dependencies. Never self-link (WM_PROJECT == OpenFOAM) */
+PROJECT_LIBS =
