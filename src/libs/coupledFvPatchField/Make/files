@@ -1,0 +1,3 @@
+MUICoupledFvPatchFields.C
+
+LIB = $(FOAM_USER_LIBBIN)/libMUICoupledFvPatchFields

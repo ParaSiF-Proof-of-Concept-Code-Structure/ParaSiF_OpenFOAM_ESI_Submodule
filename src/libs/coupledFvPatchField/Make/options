@@ -1,0 +1,19 @@
+sinclude $(GENERAL_RULES)/mplib$(WM_MPLIB)
+sinclude $(RULES)/mplib$(WM_MPLIB)
+
+EXE_INC = \
+    $(PFLAGS) \
+    $(PINC) \
+    -I$(LIB_SRC)/fileFormats/lnInclude \
+    -I$(LIB_SRC)/surfMesh/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I../../../../../coupling/MUI/src
+
+LIB_LIBS = \
+    $(PLIBS) \
+    -lOpenFOAM \
+    -lfileFormats \
+    -lsurfMesh \
+    -lmeshTools \
+    -lfiniteVolume
