@@ -100,6 +100,10 @@ Note
 
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
+#include "pointMesh.H"
+#include "pointFields.H"
+#include "pointPatchField.H"
+#include "fixedValuePointPatchFields.H"
 #include "singlePhaseTransportModel.H"
 #include "turbulentTransportModel.H"
 #include "pimpleControl.H"
@@ -107,11 +111,6 @@ Note
 #include "fvOptions.H"
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
-#include "pointMesh.H"   // Added by Omar
-#include "pointPatchField.H"  // Added by Omar
-#include "fixedValuePointPatchFields.H"
-
-#include "coupledForces.H"
 #include "mui.h"
 #include "mui_config.h"
 
@@ -122,7 +121,7 @@ int main(int argc, char *argv[])
     argList::addNote
     (
         "Transient solver for incompressible, turbulent flow"
-        " of Newtonian fluids on a moving mesh."
+        " of Newtonian fluids on a moving mesh with external FSI coupling."
     );
 
     #include "postProcess.H"
@@ -140,22 +139,9 @@ int main(int argc, char *argv[])
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
-    #include "couplingVar.H"
-    Foam::functionObjects::coupledForces* forces = nullptr;
-    Info << "=====================================================" <<endl;
-    if (couplingMode=="singlePoint"){
-        Info << "Coupling Force mode is  singlePoint" <<endl;
-        forces = new Foam::functionObjects::coupledForces(fsiForceName, runTime, fsiForceDict, true);
-    }else if(couplingMode=="boundaryPatch"){
-        Info << "Coupling Force mode is  boundaryPatch" <<endl;
     #include "pushForceInit.H"
     #include "fetchDisplacementInit.H"
-    } else {
-        FatalIOErrorIn("", fsiDict)
-          << "The selected couplingMode entry is invalid. The valid options are singlePoint and boundaryPatch" << exit(FatalIOError);
-    }
-    Info << "=====================================================" <<endl;
-
+  
     turbulence->validate();
 
     if (!LTS)
@@ -185,32 +171,32 @@ int main(int argc, char *argv[])
         }
 
         ++runTime;
+        ++timeSteps;
 
-        if (runTime.changeSubIter())
+        Info<< "Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time Steps = " << timeSteps << nl << endl;
+
+        if (changeSubIter)
         {
             scalar tTemp=runTime.value();
-            if (tTemp >= runTime.changeSubIterTime())
+
+            if (tTemp >= changeSubIterTime)
             {
-                runTime.updateSubIterNum(runTime.newSubIterationNumber());
+                subIterationNum = subIterationNumNew;
             }
         }
 
-        runTime.updateSubIter(0);
-        while (runTime.subIter()<runTime.subIterationNumber())
+        for(int subIter = 1; subIter <= subIterationNum; ++subIter)
         {
-            runTime.updateSubIter();
-            Info << "========================================================" << endl;
-            Info << "{OpenFOMA} : Time = " << runTime.timeName() << ", and sub-Iteration = " 
-                 << runTime.subIter() <<"/" << runTime.subIterationNumber() << endl;
-            Info << "{OpenFOMA} : Time Steps = " << runTime.timeSteps() << endl;        
-            Info << "{OpenFOMA} : Total current iteration = " << runTime.totalCurrentIter() << endl;
 
-            if (couplingMode=="singlePoint"){
-            forces->execute();
-            }else if(couplingMode=="boundaryPatch"){
+            Info<< "sub-Iteration = " << subIter << nl << endl;
+
+            totalCurrentIter++;
+
+            Info << "total current iteration = " << totalCurrentIter << nl << endl;
+
             #include "pushForce.H"
             #include "fetchDisplacement.H"
-            }
           
         // --- Pressure-velocity PIMPLE corrector loop
             while (pimple.loop())
