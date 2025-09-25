@@ -65,16 +65,16 @@ Description
 
 int main(int argc, char *argv[])
 {
-	argList::addNote
+    argList::addNote
     (
         "MUI coupling test based on laplace equation solver for a scalar quantity."
     );
 
     #include "postProcess.H"
     #include "addCheckCaseOptions.H"
-	#include "setRootCaseLists.H"
+    #include "setRootCaseLists.H"
 
-	#include "createTime.H"
+    #include "createTime.H"
     #include "createMesh.H"
 
     simpleControl simple(mesh);
@@ -234,18 +234,18 @@ int main(int argc, char *argv[])
                        }
 
                        if (std::abs(pp[i][j][k][0] - 20.0) <= 0.00001 ){
-                    	   mui::point3d locp( pp[i][j][k][0], pp[i][j][k][1], pp[i][j][k][2] );
-                    	    if (Pstream::myProcNo() == 0) {
-    							ifs[0]->push( name_pushX0, locp, force_pushX[i][j][k] );
-    							ifs[0]->push( name_pushY0, locp, force_pushY[i][j][k] );
-    							ifs[0]->push( name_pushZ0, locp, force_pushZ[i][j][k] );
-                    	    } else {
-    							ifs[0]->push( name_pushX1, locp, force_pushX[i][j][k] );
-    							ifs[0]->push( name_pushY1, locp, force_pushY[i][j][k] );
-    							ifs[0]->push( name_pushZ1, locp, force_pushZ[i][j][k] );
-                    	    }
-							std::cout << "!!{OF0} push point: " <<  locp[0] << ", " <<  locp[1] << ", "<<  locp[2] << std::endl;
-							total_force_Y += force_pushY[i][j][k];
+                           mui::point3d locp( pp[i][j][k][0], pp[i][j][k][1], pp[i][j][k][2] );
+                            if (Pstream::myProcNo() == 0) {
+                                ifs[0]->push( name_pushX0, locp, force_pushX[i][j][k] );
+                                ifs[0]->push( name_pushY0, locp, force_pushY[i][j][k] );
+                                ifs[0]->push( name_pushZ0, locp, force_pushZ[i][j][k] );
+                            } else {
+                                ifs[0]->push( name_pushX1, locp, force_pushX[i][j][k] );
+                                ifs[0]->push( name_pushY1, locp, force_pushY[i][j][k] );
+                                ifs[0]->push( name_pushZ1, locp, force_pushZ[i][j][k] );
+                            }
+                            std::cout << "!!{OF0} push point: " <<  locp[0] << ", " <<  locp[1] << ", "<<  locp[2] << std::endl;
+                            total_force_Y += force_pushY[i][j][k];
                        }
                    }
                }
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
                for ( int i = 0; i < Nx; ++i ) {
                    for ( int j = 0; j < Ny; ++j ) {
                        for ( int k = 0; k < Nz; ++k ) {
-                    	   mui::point3d locf( pf[i][j][k][0], pf[i][j][k][1], pf[i][j][k][2] );
+                           mui::point3d locf( pf[i][j][k][0], pf[i][j][k][1], pf[i][j][k][2] );
                            displacement_fetchX[i][j][k] = ifs[0]->fetch( name_fetchX, locf,
                                (totalIter-1),
                                s1,
