@@ -158,13 +158,14 @@
         }
     }
 
-	mui::algo_aitken<mui::mui_config>* aitken_x = nullptr;
-    mui::algo_aitken<mui::mui_config>* aitken_y = nullptr;
-    mui::algo_aitken<mui::mui_config>* aitken_z = nullptr;
+    // create on the stack
+    mui::algo_aitken<mui::mui_config> aitken_x(static_cast<double>(initUndRelxCpl), 1.0);
+    mui::algo_aitken<mui::mui_config> aitken_y(static_cast<double>(initUndRelxCpl), 1.0);
+    mui::algo_aitken<mui::mui_config> aitken_z(static_cast<double>(initUndRelxCpl), 1.0);
 
-	mui::algo_fixed_relaxation<mui::mui_config>* fr_x = nullptr;
-    mui::algo_fixed_relaxation<mui::mui_config>* fr_y = nullptr;
-    mui::algo_fixed_relaxation<mui::mui_config>* fr_z = nullptr;
+    mui::algo_fixed_relaxation<mui::mui_config> fr_x(static_cast<double>(initUndRelxCpl));
+    mui::algo_fixed_relaxation<mui::mui_config> fr_y(static_cast<double>(initUndRelxCpl));
+    mui::algo_fixed_relaxation<mui::mui_config> fr_z(static_cast<double>(initUndRelxCpl));
 
     // define spatial and temporal samplers
     mui::sampler_pseudo_n2_linear<mui::mui_config> spatial_sampler(rSampler);
@@ -197,14 +198,6 @@
 
 
         }
-
-    aitken_x = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0);
-    aitken_y = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0);
-    aitken_z = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0);
-    fr_x     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl));
-    fr_y     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl));
-    fr_z     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl));
-
 
     int totPointSize = 0;
 

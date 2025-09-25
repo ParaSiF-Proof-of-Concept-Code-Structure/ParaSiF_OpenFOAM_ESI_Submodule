@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 
             Info<< "sub-Iteration = " << subIter << nl << endl;
 
-            totalCurrentIter++;
+            ++totalCurrentIter;
 
             Info << "total current iteration = " << totalCurrentIter << nl << endl;
 

@@ -31,8 +31,8 @@
     mui::point3d rcv_point;
 
     scalar t = mesh.time().value();
-
-    Info << "{OpenFOAM} Fetch iteration " << totalCurrentIter << nl << endl;
+ 
+    Info << "{OpenFOAM} Fetch iteration " << (totalCurrentIter - 0) << nl << endl;
     if((totalCurrentIter-0) >= 0)
     {                    
         forAll(interfaceNames, iN)
@@ -58,19 +58,19 @@
                         if (cplMethod == "Aitken")
                         {
                             fetchTempX =
-                                    ifs[iN]->fetch(fetchNameX, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*aitken_x);
+                                    ifs[iN]->fetch(fetchNameX, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,aitken_x);
                             fetchTempY =
-                                    ifs[iN]->fetch(fetchNameY, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*aitken_y);
+                                    ifs[iN]->fetch(fetchNameY, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,aitken_y);
                             fetchTempZ =
-                                    ifs[iN]->fetch(fetchNameZ, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*aitken_z);
+                                    ifs[iN]->fetch(fetchNameZ, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,aitken_z);
                         } else if (cplMethod == "FixedRelaxation")
                         {
                             fetchTempX =
-                                    ifs[iN]->fetch(fetchNameX, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*fr_x);
+                                    ifs[iN]->fetch(fetchNameX, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,fr_x);
                             fetchTempY =
-                                    ifs[iN]->fetch(fetchNameY, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*fr_y);
+                                    ifs[iN]->fetch(fetchNameY, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,fr_y);
                             fetchTempZ =
-                                    ifs[iN]->fetch(fetchNameZ, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,*fr_z);
+                                    ifs[iN]->fetch(fetchNameZ, rcv_point, static_cast<double>(totalCurrentIter-0), spatial_sampler, chrono_sampler,fr_z);
                         }  else if (cplMethod == "Loose")
                         {
                             fetchTempX =
@@ -85,7 +85,7 @@
                         } 
 
 							dispVectorValsList[iN][pI][pointI].component(vector::X) = fetchTempX;
-							dispVectorValsList[iN][pI][pointI].component(vector::Y) = fetchTempX;
+							dispVectorValsList[iN][pI][pointI].component(vector::Y) = fetchTempY;
 							dispVectorValsList[iN][pI][pointI].component(vector::Z) = fetchTempZ;
                     }
 
