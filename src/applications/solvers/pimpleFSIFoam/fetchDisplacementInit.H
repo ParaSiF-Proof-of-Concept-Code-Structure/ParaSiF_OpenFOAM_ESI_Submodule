@@ -23,8 +23,8 @@
 *****************************************************************************/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-	// Debug switch for fetchDisplacementInit.H
-	bool debugFetchDisplacementInit = false;
+    // Debug switch for fetchDisplacementInit.H
+    bool debugFetchDisplacementInit = false;
     
     // Declare MUI FSI residual output.
     fileName muiResidualFile("muiFSIResidual.txt");
@@ -177,27 +177,25 @@
 
     forAll(interfaceNames, iN)
     {
-            forAll(patchIDs[iN], pI)
-            {
+        forAll(patchIDs[iN], pI)
+        {
             // Loop over points to receive displacement values and assigned to dispVectorVals
             //- Blocking fetch for value passed through interface from coupled solver
 
-                forAll(dispVectorValsList[iN][pI], pointI)
-                {
-                    rcv_point[0] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X);
-                    rcv_point[1] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y);
-                    rcv_point[2] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z);                   
+            forAll(dispVectorValsList[iN][pI], pointI)
+            {
+                rcv_point[0] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X);
+                rcv_point[1] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y);
+                rcv_point[2] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z);
 
-                    if (rankHasPatchPointsForfetch)
-                    {
-                        ptsVluInit.push_back(std::make_pair(rcv_point,0.0));
-                        count++;
-                    }
+                if (rankHasPatchPointsForfetch)
+                {
+                    ptsVluInit.push_back(std::make_pair(rcv_point,0.0));
+                    ++count;
                 }
             }
-
-
         }
+    }
 
     int totPointSize = 0;
 

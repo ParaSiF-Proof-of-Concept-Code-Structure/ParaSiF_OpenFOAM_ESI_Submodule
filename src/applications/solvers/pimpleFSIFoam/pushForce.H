@@ -24,8 +24,8 @@
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-	// Debug switch for pushForce.H
-	bool debugPushForce = false;
+    // Debug switch for pushForce.H
+    bool debugPushForce = false;
 
     // Obtain the normal vectors on the boundary faces
     const surfaceVectorField::Boundary& Sfb = mesh.Sf().boundaryField();

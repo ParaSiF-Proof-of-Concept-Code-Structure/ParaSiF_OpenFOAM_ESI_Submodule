@@ -22,11 +22,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.      *
 *****************************************************************************/
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-	// Debug switch for fetchDisplacement.H
-	bool debugFetchDisplacement = false;
+    // Debug switch for fetchDisplacement.H
+    bool debugFetchDisplacement = false;
 
     mui::point3d rcv_point;
 
@@ -37,7 +36,7 @@
     {                    
         forAll(interfaceNames, iN)
         {
-			int pointCounter = 0;
+            int pointCounter = 0;
 
             forAll(patchIDs[iN], pI)
             {
@@ -46,7 +45,7 @@
 
                 forAll(dispVectorValsList[iN][pI], pointI)
                 {
-                    pointCounter++;
+                    ++pointCounter;
 
                     rcv_point[0] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X);
                     rcv_point[1] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y);
@@ -84,23 +83,23 @@
                             FatalError << "cplFSIMethod: " << cplMethod << " in fsiDict is not recognized!" << exit(FatalError);
                         } 
 
-							dispVectorValsList[iN][pI][pointI].component(vector::X) = fetchTempX;
-							dispVectorValsList[iN][pI][pointI].component(vector::Y) = fetchTempY;
-							dispVectorValsList[iN][pI][pointI].component(vector::Z) = fetchTempZ;
+                            dispVectorValsList[iN][pI][pointI].component(vector::X) = fetchTempX;
+                            dispVectorValsList[iN][pI][pointI].component(vector::Y) = fetchTempY;
+                            dispVectorValsList[iN][pI][pointI].component(vector::Z) = fetchTempZ;
                     }
 
-						if((dispVectorValsList[iN][pI][pointI].component(vector::X) != 0.0) && (debugFetchDisplacement == true))
-						{
-							Pout << "dispVectorValsList[iN][pI][pointI].component(vector::X): " << dispVectorValsList[iN][pI][pointI].component(vector::X) << nl << endl;
+                        if((dispVectorValsList[iN][pI][pointI].component(vector::X) != 0.0) && (debugFetchDisplacement == true))
+                        {
+                            Pout << "dispVectorValsList[iN][pI][pointI].component(vector::X): " << dispVectorValsList[iN][pI][pointI].component(vector::X) << nl << endl;
                         }
-						if((dispVectorValsList[iN][pI][pointI].component(vector::Y) != 0.0) && (debugFetchDisplacement == true))
-						{
-							Pout << "dispVectorValsList[iN][pI][pointI].component(vector::Y): " << dispVectorValsList[iN][pI][pointI].component(vector::Y) << nl << endl;
-						}
-						if((dispVectorValsList[iN][pI][pointI].component(vector::Z) != 0.0) && (debugFetchDisplacement == true))
-						{
-							Pout << "dispVectorValsList[iN][pI][pointI].component(vector::Z): " << dispVectorValsList[iN][pI][pointI].component(vector::Z) << nl << endl;
-						}
+                        if((dispVectorValsList[iN][pI][pointI].component(vector::Y) != 0.0) && (debugFetchDisplacement == true))
+                        {
+                            Pout << "dispVectorValsList[iN][pI][pointI].component(vector::Y): " << dispVectorValsList[iN][pI][pointI].component(vector::Y) << nl << endl;
+                        }
+                        if((dispVectorValsList[iN][pI][pointI].component(vector::Z) != 0.0) && (debugFetchDisplacement == true))
+                        {
+                            Pout << "dispVectorValsList[iN][pI][pointI].component(vector::Z): " << dispVectorValsList[iN][pI][pointI].component(vector::Z) << nl << endl;
+                        }
                 }
             }
         }
@@ -144,7 +143,7 @@
 
     forAll(interfaceNames, iN)
     {
-		int pointCounter = 0;
+        int pointCounter = 0;
 
         forAll(patchIDs[iN], pI)
         {
@@ -158,7 +157,7 @@
             // Loop over points to assign dispVectorVals to cellDisplacement boundaryFieldRef, i.e. move the nodes
             forAll(dispVectorValsList[iN][pI], pointI)
             {
-				pointCounter++;
+                ++pointCounter;
 
                 PointPointerLocal[pointI].component(vector::X) = rigidMotionAmplitudeX_*Foam::sin(2*3.1416*rigidMotionFrqX_*t);
                 PointPointerLocal[pointI].component(vector::Y) = rigidMotionAmplitudeY_*Foam::sin(2*3.1416*rigidMotionFrqY_*t);
@@ -167,7 +166,7 @@
                 PointPointerLocal[pointI].component(vector::X) += dispVectorValsList[iN][pI][pointI].component(vector::X);
                 PointPointerLocal[pointI].component(vector::Y) += dispVectorValsList[iN][pI][pointI].component(vector::Y);
                 PointPointerLocal[pointI].component(vector::Z) += dispVectorValsList[iN][pI][pointI].component(vector::Z);
-      
+
 
                 if((PointPointerLocal[pointI].component(vector::X) != 0.0) && (debugFetchDisplacement == true))
                 {
@@ -198,8 +197,8 @@
                     }
                 }
             }
-		}
-	}
+        }
+    }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
