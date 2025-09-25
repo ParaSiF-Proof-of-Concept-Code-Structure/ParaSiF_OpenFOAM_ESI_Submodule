@@ -15,36 +15,36 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-ddtSchemes  							                        
+ddtSchemes
 {
-    default                                 backward;  
+    default                                 backward;
 }
 
-d2dt2Schemes  							                        
+d2dt2Schemes
 {
-    default                                 Euler;  			
+    default                                 Euler;
 }
 
-gradSchemes 							                       
+gradSchemes
 {
-    default                                 Gauss linear;       
+    default                                 Gauss linear;
     grad(p)                                 Gauss linear;
     grad(U)                                 cellLimited 
                                                 Gauss linear 1;
 }
 
-divSchemes  							                        
+divSchemes
 {
-    default                                 Gauss linear;       
+    default                                 Gauss linear;
     div(phi,U)                              Gauss linearUpwind 
                                                 cellLimited 
                                                 leastSquares 1; 
     div((nuEff*dev2(T(grad(U)))))           Gauss linear;
 }
 
-laplacianSchemes 						                        
+laplacianSchemes
 {
-    default                                 none;               
+    default                                 none;
     laplacian(nu,U)                         Gauss linear 
                                                 corrected;
     laplacian((1|A(U)),p)                   Gauss linear 
@@ -57,19 +57,19 @@ laplacianSchemes
                                                 corrected;
 }
 
-interpolationSchemes 					                        
+interpolationSchemes
 {
-    default                                 linear;  			
+    default                                 linear;
     interpolate(U)                          linear;
 }
 
-snGradSchemes  							                        
+snGradSchemes
 {
     default                                 limited 
-                                                corrected 0.5;  
+                                                corrected 0.5;
 }
 
-fluxRequired 							                        
+fluxRequired
 {
     default                                 no;
     p                                       ;

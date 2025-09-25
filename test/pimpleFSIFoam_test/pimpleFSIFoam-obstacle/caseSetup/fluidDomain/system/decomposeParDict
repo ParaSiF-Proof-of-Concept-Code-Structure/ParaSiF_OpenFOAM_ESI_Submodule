@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-numberOfSubdomains 		        3;
-method                          scotch;	
+numberOfSubdomains                 3;
+method                          scotch;
 
 // ************************************************************************* //

@@ -28,17 +28,17 @@ interfaceLists
     }
 );
 
-subIterationNumber	    5;
+subIterationNumber        5;
 forgetFSITimeSteps      5;
 
 changeFSISubIter        no;
 changeFSISubIterTime    15.0;
-newFSISubIterationNum	5;
+newFSISubIterationNum    5;
 
 pushFSIForce            yes;
-sendFSINameX		    forceX;
-sendFSINameY		    forceY;
-sendFSINameZ		    forceZ;
+sendFSINameX            forceX;
+sendFSINameY            forceY;
+sendFSINameZ            forceZ;
 
 applyFSIFetchX          yes;
 applyFSIFetchY          yes;
@@ -72,7 +72,7 @@ rigidMotionAmplitudeX     0.0;
 rigidMotionAmplitudeY     0.0;
 rigidMotionAmplitudeZ     0.0;
 
-rotation2DFrq     		0.61;
+rotation2DFrq             0.61;
 rotation2DAmplitude     0.0;
 rotation2DOriginX     0.0;
 rotation2DOriginY     0.0;

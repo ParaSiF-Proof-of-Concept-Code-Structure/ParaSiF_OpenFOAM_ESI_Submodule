@@ -24,7 +24,7 @@ boundaryField
     {
         type            fixedValue;
         value           uniform (0.5 0 0);
-		
+
 //        type            parabolicInletVelocity;
 //        maxVelocity     0.2;
 //        tp              1.0;
