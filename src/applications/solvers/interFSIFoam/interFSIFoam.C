@@ -64,6 +64,10 @@ Description
 
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
+#include "pointMesh.H"
+#include "pointFields.H"
+#include "pointPatchField.H"
+#include "fixedValuePointPatchFields.H"
 #include "CMULES.H"
 #include "EulerDdtScheme.H"
 #include "localEulerDdtScheme.H"
@@ -76,12 +80,10 @@ Description
 #include "fvOptions.H"
 #include "CorrectPhi.H"
 #include "fvcSmooth.H"
-#include "fixedValuePointPatchFields.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-#include "coupledForces.H"
 #include "mui.h"
 #include "mui_config.h"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
@@ -90,38 +92,26 @@ int main(int argc, char *argv[])
         "Solver for two incompressible, isothermal immiscible fluids"
         " using VOF phase-fraction based interface capturing.\n"
         "With optional mesh motion and mesh topology changes including"
-        " adaptive re-meshing."
+        " adaptive re-meshing with external FSI coupling."
     );
+
     #include "postProcess.H"
 
     #include "addCheckCaseOptions.H"
     #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
+    #include "createDynamicFvMeshOri.H"
     #include "initContinuityErrs.H"
+    #include "initFSILocalContinuityErrs.H"
     #include "createDyMControls.H"
     #include "createFields.H"
     #include "createAlphaFluxes.H"
     #include "initCorrectPhi.H"
     #include "createUfIfPresent.H"
 
-    #include "couplingVar.H"
-    Foam::functionObjects::coupledForces* forces = nullptr;
-    Info << "=====================================================" <<endl;
-    if (couplingMode=="singlePoint"){
-        Info << "Coupling Force mode is  singlePoint" <<endl;
-        forces = new Foam::functionObjects::coupledForces(fsiForceName, runTime, fsiForceDict, true);
-    }else if(couplingMode=="boundaryPatch"){
-        Info << "Coupling Force mode is  boundaryPatch" <<endl;
     #include "pushForceInit.H"
     #include "fetchDisplacementInit.H"
-    } else {
-        FatalIOErrorIn("", fsiDict)
-          << "The selected couplingMode entry is invalid. The valid options are singlePoint and boundaryPatch" << exit(FatalIOError);
-    }
-    Info << "=====================================================" <<endl;
-
-            
 
     if (!LTS)
     {
@@ -130,12 +120,11 @@ int main(int argc, char *argv[])
     }
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
     Info<< "\n {OpenFOMA} :Starting time loop\n" << endl;
-    // #ifdef USE_MUI
-    // Reads coupling dictionary and populates DynamicLists (mui2dInterfaces / mui3dInterfaces / muiTemplatedInterfaces)
-    // These are created by the corresponding header file "createCouplingData.H"
-    // #include "createCouplingMUI.H" 
-    // #endif
+    Info<< "ExecutionStartTime = " << runTime.elapsedCpuTime() << " s"
+        << "  StartClockTime = " << runTime.elapsedClockTime() << " s"
+        << nl << endl;
     while (runTime.run())
     {
         #include "readDyMControls.H"
@@ -150,31 +139,34 @@ int main(int argc, char *argv[])
             #include "alphaCourantNo.H"
             #include "setDeltaT.H"
         }
-        ++runTime;
 
-        if (runTime.changeSubIter())
+        ++runTime;
+        ++timeSteps;
+
+        Info<< "Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time Steps = " << timeSteps << nl << endl;
+
+        if (changeSubIter)
         {
             scalar tTemp=runTime.value();
-            if (tTemp >= runTime.changeSubIterTime())
+
+            if (tTemp >= changeSubIterTime)
             {
-                runTime.updateSubIterNum(runTime.newSubIterationNumber());
+                subIterationNum = subIterationNumNew;
             }
         }
-        runTime.updateSubIter(0);
-        while (runTime.subIter()<runTime.subIterationNumber())
-        {
-            runTime.updateSubIter();
-            Info << "{OpenFOMA} : Time = " << runTime.timeName() << ", and sub-Iteration = " 
-                 << runTime.subIter() <<"/" << runTime.subIterationNumber() << nl << endl;
-            Info << "{OpenFOMA} : Time Steps = " << runTime.timeSteps() << nl << endl;        
-            Info << "{OpenFOMA} : Total current iteration = " << runTime.totalCurrentIter() << nl << endl;
 
-        if (couplingMode=="singlePoint"){
-            forces->execute();
-        }else if(couplingMode=="boundaryPatch"){
+        for(int subIter = 1; subIter <= subIterationNum; ++subIter)
+        {
+
+            Info<< "sub-Iteration = " << subIter << nl << endl;
+
+            ++totalCurrentIter;
+
+            Info << "total current iteration = " << totalCurrentIter << nl << endl;
+
             #include "pushForce.H"
             #include "fetchDisplacement.H"
-        }
 
             // --- Pressure-velocity PIMPLE corrector loop
             while (pimple.loop())
@@ -242,12 +234,19 @@ int main(int argc, char *argv[])
                 }
             }
         }
+
         runTime.write();
 
         runTime.printExecutionTime(Info);
     }
 
     Info<< "End\n" << endl;
+
+        //- If this is not a parallel run then need to finalise MPI (otherwise this is handled by MUI due to the use of split_by_app() function)
+        if (!args.parRunControl().parRun())
+        {
+            MPI_Finalize();
+        }
 
     return 0;
 }
