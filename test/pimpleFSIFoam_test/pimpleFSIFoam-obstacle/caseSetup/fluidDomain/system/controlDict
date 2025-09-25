@@ -26,7 +26,7 @@ writeInterval     1;
 purgeWrite        0;
 writeFormat       binary;
 writePrecision    18;
-writeCompression  compressed;
+writeCompression  uncompressed;
 timeFormat        general;
 timePrecision     18;
 graphFormat       gnuplot;
@@ -49,16 +49,16 @@ functions
         type                forces;
         libs                ("libforces.so");
         enabled             true;
-        writeControl       timeStep;
-        writeInterval      1;
+        writeControl        timeStep;
+        writeInterval       1;
         timeStart           0.;
         timeEnd             1.E+10;
      
         patches             ( "interface" );
         directForceDensity  no;
-        p               p;
-        U               U;
-        rho             rhoInf;
+        p                   p;
+        U                   U;
+        rho                 rhoInf;
         log                 true;           // Dump to file
 
         CofR                (0. 0. 0.);
@@ -71,16 +71,16 @@ functions
         type                forceCoeffs;
         libs                ( "libforces.so" );
         enabled             true;
-        writeControl       timeStep;
-        writeInterval      1;
+        writeControl        timeStep;
+        writeInterval       1;
         timeStart           0.;
         timeEnd             1.E+10;
  
         patches             ( "interface" );
         directForceDensity  no;
-        p               p;
-        U               U;
-        rho             rhoInf;
+        p                   p;
+        U                   U;
+        rho                 rhoInf;
         log                 true;
 
         liftDir             (0. 1. 0.);
