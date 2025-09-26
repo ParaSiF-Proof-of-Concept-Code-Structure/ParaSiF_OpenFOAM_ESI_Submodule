@@ -1,4 +1,4 @@
-/*--------------------------------*- C++ -*----------------------------------*\
+ /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
 |  \\    /   O peration     | Version:  v2506                                 |
@@ -15,9 +15,8 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-ifsID        0;
+domainFSIName           fluidDomain;
 
-couplingMode      singlePoint;
 interfaceLists
 ( 
     threeDInterface0
@@ -26,15 +25,24 @@ interfaceLists
         (
             interface
         );
+        Patch6DoFNames
+        (
+            interface
+        );
     }
 );
 
-forgetFSITime      1;
+subIterationNumber     5;
+forgetFSITimeSteps     5;
+
+changeFSISubIter        no;
+changeFSISubIterTime    15.0;
+newFSISubIterationNum    5;
 
 pushFSIForce            yes;
-sendFSINameX		    forceX;
-sendFSINameY		    forceY;
-sendFSINameZ		    forceZ;
+sendFSINameX            forceX;
+sendFSINameY            forceY;
+sendFSINameZ            forceZ;
 
 applyFSIFetchX          yes;
 applyFSIFetchY          yes;
@@ -47,9 +55,9 @@ fetchFSINameZ           dispZ;
 searchAreaSampler       1.0;
 
 // FixedRelaxation; Aitken; IQN_ILS; Loose;
-cplMethod            Aitken; 
-initUndRelxCpl       0.5;
-cplAlgo_res_tolerance   -0.5;
+cplFSIMethod            Loose;
+initFSIUndRelxCpl       0.6;
+
 //- Maximum value of the under relaxation number (valid only for IQN-ILS)
 maxFSIUndRelxCpl        1.0;
 //- Number of Aitken iterations to at the beginning of each IQN-ILS time-steps (valid only for IQN-ILS)
@@ -60,28 +68,18 @@ pushFSIDelay            0;
 twoDimFSICorrection     no;
 twoDimFSICellHeight     0.015;
 
-rigidMotionFrqX     0.61;
-rigidMotionFrqY     0.61;
-rigidMotionFrqZ     0.61;
+rigidMotionFrqX     0.012732395;
+rigidMotionFrqY     0.012732395;
+rigidMotionFrqZ     0.012732395;
 
 rigidMotionAmplitudeX     0.0;
 rigidMotionAmplitudeY     0.0;
 rigidMotionAmplitudeZ     0.0;
 
-rotation2DFrq     		0.61;
-rotation2DAmplitude     0.0;
+rotation2DFrq         0.61;
+rotation2DAmplitude   0.0;
 rotation2DOriginX     0.0;
 rotation2DOriginY     0.0;
 rotation2DOriginZ     0.0;
-coupledForces
-{
-    type            coupledForces;
-    libs            ( "libforces.so" );
-    patches         ( ".*Wall.*" );
-    CofR            (0.6862 -1.5668  0.2138);
-    log             true;
-    writeControl    timeStep;
-    writeInterval   1;
-};
 
 // ************************************************************************* //

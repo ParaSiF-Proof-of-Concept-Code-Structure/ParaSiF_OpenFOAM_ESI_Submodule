@@ -9,25 +9,27 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      nut;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -1 0 0 0 0];
+dynamicFvMesh       dynamicMotionSolverFvMesh;
 
-internalField   uniform 0;
+motionSolverLibs    ("libfvMotionSolvers.so");
 
-boundaryField
-{
-    "(.*Wall.*)"
-    {
-        type            nutkWallFunction;
-        value           uniform 0;
-    }
+twoDMotion          no;
 
-}
+solver              displacementLaplacian;
 
+diffusivity         quadratic inverseDistance 1(interface);
+
+frozenDiffusion     yes;
+
+distancePatches
+(
+    interface
+);
 
 // ************************************************************************* //
