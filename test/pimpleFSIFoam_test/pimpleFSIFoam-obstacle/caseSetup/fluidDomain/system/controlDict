@@ -26,7 +26,7 @@ writeInterval     1;
 purgeWrite        0;
 writeFormat       binary;
 writePrecision    18;
-writeCompression  uncompressed;
+writeCompression  compressed;
 timeFormat        general;
 timePrecision     18;
 graphFormat       gnuplot;

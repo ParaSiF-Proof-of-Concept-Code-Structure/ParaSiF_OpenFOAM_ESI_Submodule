@@ -153,7 +153,7 @@ int main(int argc, char ** argv) {
             for ( int i = 0; i < Nx; ++i ) {
                 for ( int j = 0; j < Ny; ++j ) {
                     for ( int k = 0; k < Nz; ++k ) {
-                        displacement_pushX[i][j][k] = (1.25 * (pp[i][j][k][1] * pp[i][j][k][1])) * sin(2 * M_PI * 0.5 * (timeStepSize * n));
+                        displacement_pushX[i][j][k] = (0.625 * (pp[i][j][k][1] * pp[i][j][k][1])) * sin(2 * M_PI * 0.5 * (timeStepSize * n));
                         displacement_pushY[i][j][k] = 0.;
                         displacement_pushZ[i][j][k] = 0.;
 
