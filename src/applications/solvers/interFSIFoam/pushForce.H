@@ -24,19 +24,8 @@
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-	// Debug switch for pushForce.H
-	bool debugPushForce = false;
-    IOdictionary transportProperties
-    (
-        IOobject
-        (
-            "transportProperties",
-            runTime.constant(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
+    // Debug switch for pushForce.H
+    bool debugPushForce = false;
 
     // Obtain the normal vectors on the boundary faces
     const surfaceVectorField::Boundary& Sfb = mesh.Sf().boundaryField();
@@ -57,19 +46,20 @@
     Info << "{OpenFOAM} : rho Water: " << rhoForceWater << " nu Water: " << nuForceWater << nl << endl;
     Info << "{OpenFOAM} : rho Air: " << rhoForceAir << " nu Air: " << nuForceAir << nl << endl;
 
-	//to avoid negative values
+    //to avoid negative values
     const volScalarField limitedAlphaWater
     (
         "limitedAlphaWater",
         min(max(alphaWater, scalar(0)), scalar(1))
     );
-	
-	tmp<volSymmTensorField> tdevRhoReffWater = (-rhoForce*nuForceWater*dev(twoSymm(fvc::grad(UForce))));
-	const volSymmTensorField::Boundary& devRhoReffbWater
-		= tdevRhoReffWater().boundaryField();
 
-	tmp<volSymmTensorField> tdevRhoReffAir = (-rhoForce*nuForceWater*dev(twoSymm(fvc::grad(UForce))));
+    tmp<volSymmTensorField> tdevRhoReffWater = (-rhoForce*nuForceWater*dev(twoSymm(fvc::grad(UForce))));
+    const volSymmTensorField::Boundary& devRhoReffbWater
+        = tdevRhoReffWater().boundaryField();
 
+    tmp<volSymmTensorField> tdevRhoReffAir = (-rhoForce*nuForceWater*dev(twoSymm(fvc::grad(UForce))));
+    const volSymmTensorField::Boundary& devRhoReffbAir
+        = tdevRhoReffAir().boundaryField();
 
     // Calculate the total forces on each face: Total_force = Pressure_force + Share_stress.
     // Note: incompressible solvers only.
@@ -157,7 +147,7 @@
 
                 if (rankHasPatchPointsForPush)
                 {
-                    if (pushDelay >= runTime.totalCurrentIter())
+                    if (pushDelayIterations >= totalCurrentIter)
                     {
                         double tempZero = 0.0;
 
@@ -168,7 +158,7 @@
                     } else
                     {
 
-						double angle2DRotationTemp = rotation2DAmplitude_*Foam::sin(2*3.1416*rotation2DFrq_*runTime.value());
+                        double angle2DRotationTemp = rotation2DAmplitude_*Foam::sin(2*3.1416*rotation2DFrq_*runTime.value());
 
                         double tempPushX = facePush.component(vector::X) * Foam::cos(angle2DRotationTemp) +  facePush.component(vector::Y) * Foam::sin(angle2DRotationTemp);
                         double tempPushY = facePush.component(vector::Y) * Foam::cos(angle2DRotationTemp) -  facePush.component(vector::X) * Foam::sin(angle2DRotationTemp);
@@ -234,16 +224,15 @@
         }
 
         //- Commit the pushed values to the interface at current time step
-        ifs[iN]->commit(static_cast<double>(runTime.value()),runTime.subIter());
-        Info << "{OpenFOAM} : MUI interface " << interfaceNames[iN] << " Finshed commiting forces at time " << runTime.value() << 
-        " and sub iterations" << runTime.subIter() <<"/"<< runTime.subIterationNumber() << nl << endl;
+        ifs[iN]->commit(static_cast<scalar>(totalCurrentIter));
 
-        if ((runTime.value()-forgetTime) > 0)
+        if ((totalCurrentIter-2) > 0)
         {
-            ifs[iN]->forget(static_cast<scalar>(0), static_cast<scalar>(runTime.value()-forgetTime));
-            Info << "MUI interface " << iN << " forget from time 0 to " << (runTime.value()-forgetTime)  << nl << endl;
+            ifs[iN]->forget(static_cast<scalar>(0), static_cast<scalar>(totalCurrentIter-2));
+            Info << "MUI interface " << iN << " forget from 0 to " << (totalCurrentIter-2) << " iterations" << nl << endl;
         } 
 
+        Info << "{OpenFOMA}: MUI interface " << interfaceNames[iN] << " Finshed commiting forces at " << totalCurrentIter << " iterations" << nl << endl;
     }
 
     forAll(interfaceNames, iN)

@@ -1,3 +1,0 @@
-coupledForces.C
-
-LIB = $(FOAM_USER_LIBBIN)/libcoupledForces

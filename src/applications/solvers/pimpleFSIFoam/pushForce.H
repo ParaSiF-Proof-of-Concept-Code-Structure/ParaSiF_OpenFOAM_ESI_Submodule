@@ -24,19 +24,9 @@
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-	// Debug switch for pushForce.H
-	bool debugPushForce = false;
-    IOdictionary transportProperties
-    (
-        IOobject
-        (
-            "transportProperties",
-            runTime.constant(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
+    // Debug switch for pushForce.H
+    bool debugPushForce = false;
+
     // Obtain the normal vectors on the boundary faces
     const surfaceVectorField::Boundary& Sfb = mesh.Sf().boundaryField();
 
@@ -49,6 +39,7 @@
     const dimensionedScalar rhoForce(transportProperties.lookup("rho"));
     const dimensionedScalar nuForce(transportProperties.lookup("nu"));
 
+    Info << "rho: " << rhoForce << " nu: " << nuForce << nl << endl;
 
     // Calculate the total forces on each face: Total_force = Pressure_force + Share_stress.
     // Note: incompressible solvers only.
@@ -66,8 +57,7 @@
                 )
                 +
                 (
-                    (Sfb[patchIDs[iN][pI]]
-                    )
+                    Sfb[patchIDs[iN][pI]]
                     & 
                     (-rhoForce*nuForce*dev(twoSymm(fvc::grad(UForce))))().boundaryField()[patchIDs[iN][pI]]
                 );
@@ -137,7 +127,7 @@
 
                 if (rankHasPatchPointsForPush)
                 {
-                    if (pushDelay >= runTime.totalCurrentIter())
+                    if (pushDelayIterations >= totalCurrentIter)
                     {
                         double tempZero = 0.0;
 
@@ -147,17 +137,10 @@
                         ifs[iN]->push(sendNameZ, send_point, tempZero);
                     } else
                     {
-
-						double angle2DRotationTemp = rotation2DAmplitude_*Foam::sin(2*3.1416*rotation2DFrq_*runTime.value());
-
-                        double tempPushX = facePush.component(vector::X) * Foam::cos(angle2DRotationTemp) +  facePush.component(vector::Y) * Foam::sin(angle2DRotationTemp);
-                        double tempPushY = facePush.component(vector::Y) * Foam::cos(angle2DRotationTemp) -  facePush.component(vector::X) * Foam::sin(angle2DRotationTemp);
-                        double tempPushZ = facePush.component(vector::Z); 
-
                         //- Push value of three dimensional tractions with label "tractionX/tractionY/tractionZ" at each face center
-                        ifs[iN]->push(sendNameX, send_point, tempPushX);
-                        ifs[iN]->push(sendNameY, send_point, tempPushY);
-                        ifs[iN]->push(sendNameZ, send_point, tempPushZ);
+                        ifs[iN]->push(sendNameX, send_point, facePush.component(vector::X));
+                        ifs[iN]->push(sendNameY, send_point, facePush.component(vector::Y));
+                        ifs[iN]->push(sendNameZ, send_point, facePush.component(vector::Z));
                     }
                 }
 
@@ -214,16 +197,15 @@
         }
 
         //- Commit the pushed values to the interface at current time step
-        ifs[iN]->commit(static_cast<double>(runTime.value()),runTime.subIter());
-        Info << "{OpenFOMA} : {OpenFOMA} : MUI interface " << interfaceNames[iN] << " Finshed commiting forces at time " << runTime.value() << 
-        " and sub iterations" << runTime.subIter() <<"/"<< runTime.subIterationNumber() << nl << endl;
+        ifs[iN]->commit(static_cast<scalar>(totalCurrentIter));
 
-        if ((runTime.value()-forgetTime) > 0)
+        if ((totalCurrentIter-2) > 0)
         {
-            ifs[iN]->forget(static_cast<scalar>(0), static_cast<scalar>(runTime.value()-forgetTime));
-            Info << "MUI interface " << iN << " forget from time 0 to " << (runTime.value()-forgetTime)  << nl << endl;
+            ifs[iN]->forget(static_cast<scalar>(0), static_cast<scalar>(totalCurrentIter-2));
+            Info << "MUI interface " << iN << " forget from 0 to " << (totalCurrentIter-2) << " iterations" << nl << endl;
         } 
 
+        Info << "{OpenFOMA}: MUI interface " << interfaceNames[iN] << " Finshed commiting forces at " << totalCurrentIter << " iterations" << nl << endl;
     }
 
     forAll(interfaceNames, iN)

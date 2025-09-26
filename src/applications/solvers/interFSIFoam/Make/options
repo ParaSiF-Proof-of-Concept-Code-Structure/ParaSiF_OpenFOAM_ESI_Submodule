@@ -4,7 +4,7 @@ sinclude $(RULES)/mplib$(WM_MPLIB)
 EXE_INC = \
     $(PINC) \
     $(PFLAGS) \
-    -I../VoF \
+    -I$(FOAM_SOLVERS)/multiphase/VoF \
     -I$(LIB_SRC)/phaseSystemModels/twoPhaseInter/incompressibleInterPhaseTransportModel/lnInclude \
     -I$(LIB_SRC)/phaseSystemModels/twoPhaseInter/VoFphaseIncompressibleTurbulenceModels/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \

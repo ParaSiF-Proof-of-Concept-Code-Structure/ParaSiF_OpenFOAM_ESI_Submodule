@@ -23,14 +23,27 @@
 *****************************************************************************/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-	// Debug switch for fetchDisplacementInit.H
-	bool debugFetchDisplacementInit = false;
-    pointVectorField& pointDisplacement =
-        const_cast<pointVectorField&>
+    // Debug switch for fetchDisplacementInit.H
+    bool debugFetchDisplacementInit = false;
+    
+    // Declare MUI FSI residual output.
+    fileName muiResidualFile("muiFSIResidual.txt");
+    OFstream muiResidual(runTime.system()/muiResidualFile);
+
+    pointVectorField* pointDisplacement = 
+        const_cast<pointVectorField*>
         (
-            mesh.lookupObject<pointVectorField>("pointDisplacement")
+            &mesh.lookupObject<pointVectorField>
+            (
+                "pointDisplacement"
+            )
         );
 
+    List<List<vectorField>> dispVectorValsList;
+    List<List<vectorField>> dispVectorOldValsList;
+    List<List<vectorField>> oriCoordFetchPointsVectorValsList;
+
+    bool rankHasPatchPointsForfetch = false;
 
     forAll(interfaceNames, iN)
     {
@@ -39,20 +52,19 @@
         List<vectorField> dispVectorOldValsListLocal;
         List<vectorField> oriCoordFetchPointsVectorValsListLocal;
 
-
-        forAll(patch6DoFIDs[iN], pI)
+        forAll(patchIDs[iN], pI)
         {
 
-            if(pointDisplacement.boundaryFieldRef()[patch6DoFIDs[iN][pI]].size() != 0)
+            if(pointDisplacement->boundaryFieldRef()[patchIDs[iN][pI]].size() != 0)
             {
                 rankHasPatchPointsForfetch = true;
             }
 
             // Declare a vectorField to store the fetched displacements.
-            vectorField dispVectorValsLocal(pointDisplacement.boundaryFieldRef()[patch6DoFIDs[iN][pI]].size());
-            vectorField dispVectorOldValsLocal(pointDisplacement.boundaryFieldRef()[patch6DoFIDs[iN][pI]].size());
+            vectorField dispVectorValsLocal(pointDisplacement->boundaryFieldRef()[patchIDs[iN][pI]].size());
+            vectorField dispVectorOldValsLocal(pointDisplacement->boundaryFieldRef()[patchIDs[iN][pI]].size());
             // Declare a vectorField to store the original point coordinates.
-            vectorField oriCoordFetchPointsVectorValsLocal(pointDisplacement.boundaryFieldRef()[patch6DoFIDs[iN][pI]].size());
+            vectorField oriCoordFetchPointsVectorValsLocal(pointDisplacement->boundaryFieldRef()[patchIDs[iN][pI]].size());
 
             dispVectorValsListLocal.append(dispVectorValsLocal);
             dispVectorOldValsListLocal.append(dispVectorOldValsLocal);
@@ -75,17 +87,17 @@
     forAll(interfaceNames, iN)
     {
 
-        forAll(patch6DoFIDs[iN], pI)
+        forAll(patchIDs[iN], pI)
         {
             // Loop over points to Store the original point coordinates
             forAll(dispVectorValsList[iN][pI], pointI)
             {
                 oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X) =
-                    mesh.boundaryMesh()[patch6DoFIDs[iN][pI]].localPoints()[pointI].component(vector::X);
+                    mesh.boundaryMesh()[patchIDs[iN][pI]].localPoints()[pointI].component(vector::X);
                 oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y) =
-                    mesh.boundaryMesh()[patch6DoFIDs[iN][pI]].localPoints()[pointI].component(vector::Y);
+                    mesh.boundaryMesh()[patchIDs[iN][pI]].localPoints()[pointI].component(vector::Y);
                 oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z) =
-                    mesh.boundaryMesh()[patch6DoFIDs[iN][pI]].localPoints()[pointI].component(vector::Z);
+                    mesh.boundaryMesh()[patchIDs[iN][pI]].localPoints()[pointI].component(vector::Z);
 
                 dispVectorValsList[iN][pI][pointI].component(vector::X) = 0.0;
                 dispVectorValsList[iN][pI][pointI].component(vector::Y) = 0.0;
@@ -98,57 +110,66 @@
         }
     }
 
-    if (args.cplRunControl().cplRun())
+    const pointField& meshPoints = mesh.points();
+
+
+    if (rankHasPatchPointsForfetch)
     {
-
-        const pointField& meshPoints = mesh.points();
-
-
-        if (rankHasPatchPointsForfetch)
+        forAll(interfaceNames, iN)
         {
-            forAll(interfaceNames, iN)
+
+            forAll(patchIDs[iN], pI)
             {
-
-                forAll(patch6DoFIDs[iN], pI)
+                forAll(oriCoordFetchPointsVectorValsList[iN][pI], pointI)
                 {
-                    forAll(oriCoordFetchPointsVectorValsList[iN][pI], pointI)
-                    {
-                        recvXMin =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) < recvXMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) : recvXMin;
-                        recvYMin =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) < recvYMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) : recvYMin;
-                        recvZMin =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) < recvZMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) : recvZMin;
+                    recvXMin =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) < recvXMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) : recvXMin;
+                    recvYMin =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) < recvYMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) : recvYMin;
+                    recvZMin =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) < recvZMin) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) : recvZMin;
 
-                        recvXMax =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) > recvXMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) : recvXMax;
-                        recvYMax =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) > recvYMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) : recvYMax;
-                        recvZMax =
-                            ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) > recvZMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) : recvZMax;
-                    }
+                    recvXMax =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) > recvXMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X)) : recvXMax;
+                    recvYMax =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) > recvYMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y)) : recvYMax;
+                    recvZMax =
+                        ((oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) > recvZMax) ? (oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z)) : recvZMax;
                 }
             }
-        } else
+        }
+    } else
+    {
+        forAll(meshPoints, pts)
         {
-            forAll(meshPoints, pts)
-            {
-                recvXMin =
-                    (meshPoints[pts][0] < recvXMin) ? meshPoints[pts][0] : recvXMin;
-                recvYMin =
-                    (meshPoints[pts][1] < recvYMin) ? meshPoints[pts][1] : recvYMin;
-                recvZMin =
-                    (meshPoints[pts][2] < recvZMin) ? meshPoints[pts][2] : recvZMin;
+            recvXMin =
+                (meshPoints[pts][0] < recvXMin) ? meshPoints[pts][0] : recvXMin;
+            recvYMin =
+                (meshPoints[pts][1] < recvYMin) ? meshPoints[pts][1] : recvYMin;
+            recvZMin =
+                (meshPoints[pts][2] < recvZMin) ? meshPoints[pts][2] : recvZMin;
 
-                recvXMax =
-                    (meshPoints[pts][0] > recvXMax) ? meshPoints[pts][0] : recvXMax;
-                recvYMax =
-                    (meshPoints[pts][1] > recvYMax) ? meshPoints[pts][1] : recvYMax;
-                recvZMax =
-                    (meshPoints[pts][2] > recvZMax) ? meshPoints[pts][2] : recvZMax;
-            }
+            recvXMax =
+                (meshPoints[pts][0] > recvXMax) ? meshPoints[pts][0] : recvXMax;
+            recvYMax =
+                (meshPoints[pts][1] > recvYMax) ? meshPoints[pts][1] : recvYMax;
+            recvZMax =
+                (meshPoints[pts][2] > recvZMax) ? meshPoints[pts][2] : recvZMax;
         }
     }
+
+    // create on the stack
+    mui::algo_aitken<mui::mui_config> aitken_x(static_cast<double>(initUndRelxCpl), 1.0);
+    mui::algo_aitken<mui::mui_config> aitken_y(static_cast<double>(initUndRelxCpl), 1.0);
+    mui::algo_aitken<mui::mui_config> aitken_z(static_cast<double>(initUndRelxCpl), 1.0);
+
+    mui::algo_fixed_relaxation<mui::mui_config> fr_x(static_cast<double>(initUndRelxCpl));
+    mui::algo_fixed_relaxation<mui::mui_config> fr_y(static_cast<double>(initUndRelxCpl));
+    mui::algo_fixed_relaxation<mui::mui_config> fr_z(static_cast<double>(initUndRelxCpl));
+
+    // define spatial and temporal samplers
+    mui::sampler_pseudo_n2_linear<mui::mui_config> spatial_sampler(rSampler);
+    mui::temporal_sampler_exact<mui::mui_config> chrono_sampler;
 
     std::vector<std::pair<mui::point3d, double>> ptsVluInit;
     mui::point3d rcv_point;
@@ -156,113 +177,89 @@
 
     forAll(interfaceNames, iN)
     {
-        bool patchIDToFetch = false;
-
-        forAll(patch6DoFIDs[iN], pI)
+        forAll(patchIDs[iN], pI)
         {
-            forAll(patchIDs[iN], ptI)
-            {
-                if(patch6DoFIDs[iN][pI] == patchIDs[iN][ptI])
-                {
-                    patchIDToFetch = true;
-                    break;
-                }
-            }
             // Loop over points to receive displacement values and assigned to dispVectorVals
             //- Blocking fetch for value passed through interface from coupled solver
-            if(patchIDToFetch == true)
-            {
-                forAll(dispVectorValsList[iN][pI], pointI)
-                {
-                    rcv_point[0] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X);
-                    rcv_point[1] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y);
-                    rcv_point[2] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z);                   
 
-                    if (rankHasPatchPointsForfetch)
-    {
-                        ptsVluInit.push_back(std::make_pair(rcv_point,0.0));
-                        count++;
-    }
+            forAll(dispVectorValsList[iN][pI], pointI)
+            {
+                rcv_point[0] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::X);
+                rcv_point[1] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Y);
+                rcv_point[2] = oriCoordFetchPointsVectorValsList[iN][pI][pointI].component(vector::Z);
+
+                if (rankHasPatchPointsForfetch)
+                {
+                    ptsVluInit.push_back(std::make_pair(rcv_point,0.0));
+                    ++count;
                 }
             }
         }
-        }
+    }
 
+    int totPointSize = 0;
 
-    aitken_x = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0,ptsVluInit);
-    aitken_y = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0,ptsVluInit);
-    aitken_z = new mui::algo_aitken<mui::mui_config>(static_cast<double>(initUndRelxCpl),1.0,ptsVluInit);
-    fr_x     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl),ptsVluInit);
-    fr_y     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl),ptsVluInit);
-    fr_z     = new mui::algo_fixed_relaxation<mui::mui_config>(static_cast<double>(initUndRelxCpl),ptsVluInit);
-
-
-    if (args.cplRunControl().cplRun())
+    forAll(interfaceNames, iN)
     {
 
-        int totPointSize = 0;
-
-        forAll(interfaceNames, iN)
+        forAll(patchIDs[iN], pI)
         {
 
-            forAll(patch6DoFIDs[iN], pI)
-            {
-
-                totPointSize += pointDisplacement.boundaryFieldRef()[patch6DoFIDs[iN][pI]].size();
-            }
-
-            if (cplMethod == "Aitken")
-            {
-                Info << "{OpenFOAM} interface " << interfaceNames[iN] << " Aitken coupling method selected!" << endl;
-
-                muiResidual << "MUI CouplingLib Utility" << "\t" << "Aitken method" << endl;
-                muiResidual << "interfaceNames"<< "\t" << "Time" << "\t" << "Time-Step" << "\t" << "Sub-Iteration" << "\t"
-                    << "UnderRelx-Factor" << "\t" << "pointSize" << "\t"
-                    << "squareSumResidual" << "\t" << "maxResidualL-2Norm" << "\t"
-                    << "residualL2Norm" << "\t" << "forceX"
-                            << "\t" << "forceY" << "\t" << "forceZ"<< endl;
-
-            } else if (cplMethod == "FixedRelaxation")
-            {
-                Info << "{OpenFOAM} interface " << interfaceNames[iN] << " Fixed Relaxation coupling method selected!" << endl;
-
-                muiResidual << "MUI CouplingLib Utility" << "\t" << "FixedRelaxation method" << endl;
-                muiResidual << "interfaceNames"<< "\t" << "Time" << "\t" << "Time-Step" << "\t" << "Sub-Iteration" << "\t"
-                    << "UnderRelx-Factor" << "\t" << "pointSize" << "\t"
-                    << "squareSumResidual" << "\t" << "maxResidualL-2Norm" << "\t"
-                    << "residualL2Norm" << "\t" << "forceX"
-                            << "\t" << "forceY" << "\t" << "forceZ"<< endl;
-
-            } else if (cplMethod == "Loose")
-            {
-                Info << "{OpenFOAM} Loose coupling method selected!" << endl;
-            } else
-            {
-                FatalError << "cplFSIMethod: " << cplMethod << " in fsiDict is not recognized!" << exit(FatalError);
-            }
+            totPointSize += pointDisplacement->boundaryFieldRef()[patchIDs[iN][pI]].size();
         }
 
-        if (debugFetchDisplacementInit == true)
+        if (cplMethod == "Aitken")
         {
-			Pout << "recvXMin = " << recvXMin << endl;
-			Pout << "recvYMin = " << recvYMin << endl;
-			Pout << "recvZMin = " << recvZMin << endl;
+            Info << "{OpenFOAM} interface " << interfaceNames[iN] << " Aitken coupling method selected!" << endl;
 
-			Pout << "recvXMax = " << recvXMax << endl;
-			Pout << "recvYMax = " << recvYMax << endl;
-			Pout << "recvZMax = " << recvZMax << endl;
-		}
+            muiResidual << "MUI CouplingLib Utility" << "\t" << "Aitken method" << endl;
+            muiResidual << "interfaceNames"<< "\t" << "Time" << "\t" << "Time-Step" << "\t" << "Sub-Iteration" << "\t"
+                << "UnderRelx-Factor" << "\t" << "pointSize" << "\t"
+                << "squareSumResidual" << "\t" << "maxResidualL-2Norm" << "\t"
+                << "residualL2Norm" << "\t" << "forceX"
+                        << "\t" << "forceY" << "\t" << "forceZ"<< endl;
 
-        // Annouce send span
-        mui::geometry::box<mui::mui_config> recv_region( {recvXMin, recvYMin, recvZMin}, {recvXMax, recvYMax, recvZMax} );
-        forAll(interfaceNames, iN)
+        } else if (cplMethod == "FixedRelaxation")
         {
-            ifs[iN]->announce_recv_span( runTime.startTime().value(), runTime.endTime().value(), recv_region );
+            Info << "{OpenFOAM} interface " << interfaceNames[iN] << " Fixed Relaxation coupling method selected!" << endl;
 
-            // Commit ZERO step
-            ifs[iN]->commit(runTime.startTime().value(),0);
-            Info << "{OpenFOMA} : MUI interface " << interfaceNames[iN] << " commit zero step" << nl << endl;
+            muiResidual << "MUI CouplingLib Utility" << "\t" << "FixedRelaxation method" << endl;
+            muiResidual << "interfaceNames"<< "\t" << "Time" << "\t" << "Time-Step" << "\t" << "Sub-Iteration" << "\t"
+                << "UnderRelx-Factor" << "\t" << "pointSize" << "\t"
+                << "squareSumResidual" << "\t" << "maxResidualL-2Norm" << "\t"
+                << "residualL2Norm" << "\t" << "forceX"
+                        << "\t" << "forceY" << "\t" << "forceZ"<< endl;
+
+        } else if (cplMethod == "Loose")
+        {
+            Info << "{OpenFOAM} Loose coupling method selected!" << endl;
+        } else
+        {
+            FatalError << "cplFSIMethod: " << cplMethod << " in fsiDict is not recognized!" << exit(FatalError);
         }
+    }
+
+    if (debugFetchDisplacementInit == true)
+    {
+        Pout << "recvXMin = " << recvXMin << endl;
+        Pout << "recvYMin = " << recvYMin << endl;
+        Pout << "recvZMin = " << recvZMin << endl;
+
+        Pout << "recvXMax = " << recvXMax << endl;
+        Pout << "recvYMax = " << recvYMax << endl;
+        Pout << "recvZMax = " << recvZMax << endl;
+    }
+
+    // Annouce send span
+    mui::geometry::box<mui::mui_config> recv_region( {recvXMin, recvYMin, recvZMin}, {recvXMax, recvYMax, recvZMax} );
+
+    forAll(interfaceNames, iN)
+    {
+        ifs[iN]->announce_recv_span( runTime.startTime().value(), runTime.endTime().value(), recv_region );
+
+        // Commit ZERO step
+        ifs[iN]->commit(0);
+        Info << "{OpenFOMA} : MUI interface " << interfaceNames[iN] << " commit zero step" << nl << endl;
     }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
